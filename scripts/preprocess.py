@@ -10,7 +10,7 @@ sns.set()
 from typing import Union
 
 
-def load_df(data_path: Union[Path,str]) -> pd.DataFrame:
+def load_df(data_path: Union[Path,str], return_pid:bool = False) -> pd.DataFrame:
     # Load the csv
     df = pd.read_csv(data_path)
     # Extract cabin letter
@@ -34,12 +34,29 @@ def load_df(data_path: Union[Path,str]) -> pd.DataFrame:
         columns=["Sex","Embarked","CabinGroup","TicketBase"],
         drop_first=True
     )
+    # Confirm column groups
+    for c in "BCDEFGT":
+        colname = f"CabinGroup_{c}"
+        if colname not in df.columns:
+            print("Adding column:", colname)
+            df[colname] = 0
+    
+    if return_pid:
+        pid = df.PassengerId
     
     # Remove unnecessary columns
     df = df.drop(
         columns=["PassengerId","Name","Cabin","Ticket"]
     )
-    return df
+    colnames = ['Pclass', 'Age', 'SibSp', 'Parch', 'Fare', 
+                'IsCabinNA', 'IsAgeNA', 'Sex_male', 'Embarked_Q', 
+                'Embarked_S', 'CabinGroup_B', 'CabinGroup_C', 
+                'CabinGroup_D', 'CabinGroup_E', 'CabinGroup_F', 
+                'CabinGroup_G', 'CabinGroup_T', 'TicketBase_0', 
+                'TicketBase_1', 'TicketBase_2', 'TicketBase_3', 
+                'TicketBase_4']
+    df = df[colnames]
+    return (df, pid) if return_pid else df
 
 def _impute_age(df: pd.DataFrame) -> pd.DataFrame:
     df.Age = df.Age.fillna(df.Age.median())
